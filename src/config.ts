@@ -1,8 +1,9 @@
 // Same env-driven base URL pattern as the Flutter app's ApiClient — set
-// via VITE_API_BASE_URL at build/dev time, defaulting to the same
-// dev backend used elsewhere in this workspace. Replace before any real
-// deployment (an ngrok URL is not stable).
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'https://tinfoil-hankie-falcon.ngrok-free.dev/v1';
+// via VITE_API_BASE_URL at build/dev time. Defaults to the real deployed
+// Render backend (Vercel's own build already sets VITE_API_BASE_URL to
+// this same value; this fallback just keeps a plain local `npm run dev`
+// pointed somewhere real too).
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'https://vanya-backend-64ja.onrender.com/v1';
 
 // Mirrors app/core/plans.py / lib/config/plans.dart — display-only, exact
 // same values. If pricing changes, update all three.
