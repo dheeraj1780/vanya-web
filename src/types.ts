@@ -53,3 +53,8 @@ export interface SubscriptionStatusData {
   plan: string | null;
   expires_at: string | null;
 }
+
+export interface ChangePlanData {
+  plan: string;
+  message: string;
+}

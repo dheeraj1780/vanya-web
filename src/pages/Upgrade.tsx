@@ -11,6 +11,20 @@ export function Upgrade() {
   const [status, setStatus] = useState<Status>('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [busyPlan, setBusyPlan] = useState<string | null>(null);
+  // Which plan card is showing its "are you sure" strip for a downgrade —
+  // same two-step confirm pattern Account.tsx's cancel-subscription flow
+  // already uses, rather than a native window.confirm().
+  const [confirmingDowngrade, setConfirmingDowngrade] = useState<string | null>(null);
+  const [downgradeDone, setDowngradeDone] = useState<string | null>(null);
+
+  // The plan the user is actively paying for right now, if any — null
+  // covers guest/plantie/expired/cancelled alike, all of which are free
+  // to subscribe from normally.
+  const activePaidPlanKey =
+    entitlement?.subscription_status === 'active' && (entitlement.plan === 'green_thumb' || entitlement.plan === 'photosynthesis_phd')
+      ? entitlement.plan
+      : null;
+  const activePriceInr = activePaidPlanKey ? PLANS[activePaidPlanKey].priceInr : null;
 
   const handleSubscribe = async (planKey: 'green_thumb' | 'photosynthesis_phd') => {
     if (!token) return;
@@ -74,6 +88,26 @@ export function Upgrade() {
     setBusyPlan(null);
   };
 
+  // No Checkout involved — this is a downgrade (see backend's
+  // billing_service.change_plan): no new charge, so nothing for Razorpay
+  // Checkout to collect. Feature access flips immediately on success;
+  // the price only changes on the next renewal.
+  const handleDowngrade = async (planKey: 'green_thumb' | 'photosynthesis_phd') => {
+    if (!token) return;
+    setBusyPlan(planKey);
+    setErrorMessage('');
+    try {
+      await api.changePlan(token, planKey);
+      await refreshEntitlement();
+      setConfirmingDowngrade(null);
+      setDowngradeDone(planKey);
+    } catch (e) {
+      setErrorMessage(e instanceof ApiException ? e.message : 'Could not change your plan. Please try again.');
+    } finally {
+      setBusyPlan(null);
+    }
+  };
+
   if (loading) return <div className="page">Loading…</div>;
 
   return (
@@ -83,17 +117,38 @@ export function Upgrade() {
       <p style={{ marginBottom: 20 }}>More identifications, more Care Calculator runs, more room for your garden.</p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        {PAID_PLAN_ORDER.map((planKey) => (
-          <PlanCard
-            key={planKey}
-            plan={PLANS[planKey]}
-            isCurrent={entitlement?.plan === planKey}
-            highlight={planKey === 'green_thumb'}
-            busy={busyPlan === planKey}
-            disabled={!token || busyPlan !== null}
-            onSubscribe={() => handleSubscribe(planKey)}
-          />
-        ))}
+        {PAID_PLAN_ORDER.map((planKey) => {
+          const plan = PLANS[planKey];
+          const isCurrent = entitlement?.plan === planKey;
+          const isDowngrade = activePriceInr !== null && !isCurrent && plan.priceInr < activePriceInr;
+          // Already paying for a different plan and this card costs more —
+          // blocked for now rather than left open: clicking "Subscribe"
+          // here used to just create a SECOND Razorpay subscription
+          // alongside the still-active first one, with nothing cancelling
+          // the old one. Downgrading has its own safe, no-Checkout path
+          // (change_plan) below; an in-place upgrade would need its own
+          // proration/charge design, which this doesn't attempt.
+          const isBlockedUpgrade = activePriceInr !== null && !isCurrent && plan.priceInr > activePriceInr;
+
+          return (
+            <PlanCard
+              key={planKey}
+              plan={plan}
+              isCurrent={isCurrent}
+              highlight={planKey === 'green_thumb'}
+              busy={busyPlan === planKey}
+              disabled={!token || busyPlan !== null}
+              isDowngrade={isDowngrade}
+              isBlockedUpgrade={isBlockedUpgrade}
+              confirming={confirmingDowngrade === planKey}
+              justDowngraded={downgradeDone === planKey}
+              onSubscribe={() => handleSubscribe(planKey)}
+              onRequestDowngrade={() => setConfirmingDowngrade(planKey)}
+              onCancelDowngrade={() => setConfirmingDowngrade(null)}
+              onConfirmDowngrade={() => handleDowngrade(planKey as 'green_thumb' | 'photosynthesis_phd')}
+            />
+          );
+        })}
       </div>
 
       {status === 'confirming' && (
@@ -125,14 +180,28 @@ function PlanCard({
   highlight,
   busy,
   disabled,
+  isDowngrade,
+  isBlockedUpgrade,
+  confirming,
+  justDowngraded,
   onSubscribe,
+  onRequestDowngrade,
+  onCancelDowngrade,
+  onConfirmDowngrade,
 }: {
   plan: PlanConfig;
   isCurrent: boolean;
   highlight: boolean;
   busy: boolean;
   disabled: boolean;
+  isDowngrade: boolean;
+  isBlockedUpgrade: boolean;
+  confirming: boolean;
+  justDowngraded: boolean;
   onSubscribe: () => void;
+  onRequestDowngrade: () => void;
+  onCancelDowngrade: () => void;
+  onConfirmDowngrade: () => void;
 }) {
   return (
     <div className={`card${highlight ? ' highlight' : ''}`}>
@@ -156,9 +225,46 @@ function PlanCard({
         <li>{plan.diagnose.limit} diagnosis{plan.diagnose.limit === 1 ? '' : 'es'} / {plan.diagnose.period}</li>
         {plan.gardenSetupIdentifications > 0 && <li>{plan.gardenSetupIdentifications} bonus identifications to set up your garden</li>}
       </ul>
-      <button className="btn-primary" style={{ marginTop: 14 }} disabled={disabled || isCurrent} onClick={onSubscribe}>
-        {busy ? <span className="spinner" /> : isCurrent ? 'Current plan' : `Subscribe to ${plan.displayName}`}
-      </button>
+
+      {justDowngraded ? (
+        <p style={{ marginTop: 14, fontWeight: 600, color: 'var(--primary)' }}>
+          You're on {plan.displayName} now — your next bill will reflect the new price.
+        </p>
+      ) : confirming ? (
+        <div style={{ marginTop: 14 }}>
+          <p style={{ fontWeight: 600 }}>Switch to {plan.displayName} right now?</p>
+          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+            You'll get {plan.displayName}'s limits immediately — no refund for the rest of your current cycle, and your next
+            bill will be ₹{plan.priceInr}/month instead.
+          </p>
+          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+            <button className="btn-primary" style={{ background: 'var(--accent)' }} disabled={busy} onClick={onConfirmDowngrade}>
+              {busy ? <span className="spinner" /> : 'Yes, switch now'}
+            </button>
+            <button className="btn-secondary" disabled={busy} onClick={onCancelDowngrade}>
+              Never mind
+            </button>
+          </div>
+        </div>
+      ) : isBlockedUpgrade ? (
+        <>
+          <button className="btn-primary" style={{ marginTop: 14 }} disabled>
+            Cancel your current plan first
+          </button>
+          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 6 }}>
+            Manage or cancel your active plan from the Account page, then subscribe here.
+          </p>
+        </>
+      ) : (
+        <button
+          className="btn-primary"
+          style={{ marginTop: 14 }}
+          disabled={disabled || isCurrent}
+          onClick={isDowngrade ? onRequestDowngrade : onSubscribe}
+        >
+          {busy ? <span className="spinner" /> : isCurrent ? 'Current plan' : isDowngrade ? `Downgrade to ${plan.displayName}` : `Subscribe to ${plan.displayName}`}
+        </button>
+      )}
     </div>
   );
 }

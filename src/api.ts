@@ -1,7 +1,7 @@
 // Mirrors ../plant-companion-flutter_2/lib/api/client.dart's envelope
 // handling exactly — same backend, same response shape.
 import { API_BASE_URL } from './config';
-import type { CreateSubscriptionData, Entitlement, SignInData, SubscriptionStatusData } from './types';
+import type { ChangePlanData, CreateSubscriptionData, Entitlement, SignInData, SubscriptionStatusData } from './types';
 
 export class ApiException extends Error {
   errorCode: string;
@@ -50,6 +50,11 @@ export const api = {
     request<CreateSubscriptionData>('/billing/razorpay/create-subscription', { method: 'POST', token, body: { plan } }),
 
   getSubscriptionStatus: (token: string) => request<SubscriptionStatusData>('/billing/subscription-status', { token }),
+
+  // Downgrade only (a strictly cheaper active plan) -- no Checkout, no
+  // new charge; see backend's billing_service.change_plan.
+  changePlan: (token: string, plan: 'green_thumb' | 'photosynthesis_phd') =>
+    request<ChangePlanData>('/billing/razorpay/change-plan', { method: 'POST', token, body: { plan } }),
 
   cancelSubscription: (token: string) => request<{ message: string }>('/billing/razorpay/cancel-subscription', { method: 'POST', token }),
 };
