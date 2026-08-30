@@ -3,7 +3,7 @@
 // pattern, same Firebase-UID-is-the-cross-platform-identity principle that
 // makes "subscribe on web, use in app" (and vice versa) just work.
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth';
+import { onAuthStateChanged, signInWithCustomToken, signInWithPopup, signOut as firebaseSignOut, type User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider, appleProvider } from './firebase';
 import { api } from './api';
 import type { Entitlement } from './types';
@@ -39,6 +39,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn('Failed to refresh entitlement:', e);
     }
   };
+
+  // Handoff from the VANYA app: PaywallScreen mints a short-lived Firebase
+  // custom token for the exact account the user is already signed into
+  // there (see backend's POST /auth/web-handoff-token) and opens this site
+  // with it as ?auth_token=... — signing in here automatically instead of
+  // landing on a bare Google/Apple picker, where it's easy to tap a
+  // different account than the one actually using the app and end up
+  // subscribing the wrong one. Runs once, before Firebase's own restored-
+  // session check below has a chance to matter either way.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const handoffToken = params.get('auth_token');
+    if (!handoffToken) return;
+    // Stripped from the URL immediately — it's minted for one-time use and
+    // shouldn't linger in the address bar, browser history, or get shared/
+    // bookmarked with it still attached.
+    params.delete('auth_token');
+    const cleanSearch = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (cleanSearch ? `?${cleanSearch}` : ''));
+    signInWithCustomToken(auth, handoffToken).catch((e) => {
+      console.error('Web sign-in handoff failed:', e);
+    });
+  }, []);
 
   // Firebase's own auth state drives the backend session — whenever a
   // Firebase user is present (from a popup sign-in just now, or a

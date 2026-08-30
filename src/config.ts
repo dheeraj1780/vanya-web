@@ -64,3 +64,8 @@ export const PLANS: Record<string, PlanConfig> = {
 };
 
 export const PAID_PLAN_ORDER = ['green_thumb', 'photosynthesis_phd'] as const;
+
+// Mirrors the Flutter app's kAppleSignInEnabled (lib/config/feature_flags.dart)
+// — Apple sign-in hidden on both platforms for now, until Apple's own
+// Service ID / web-auth setup is finished on the Apple Developer console.
+export const APPLE_SIGN_IN_ENABLED = false;

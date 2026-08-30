@@ -139,7 +139,10 @@ function PlanCard({
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <span style={{ fontSize: 19 }}>{plan.emoji}</span>
         <h3 style={{ fontSize: 15.5, flex: 1 }}>{plan.displayName}</h3>
-        {highlight ? <span className="badge popular">MOST POPULAR</span> : isCurrent ? <span className="badge current">CURRENT</span> : null}
+        {/* isCurrent checked first — a plan that's both "Most Popular" and
+            the user's actual current plan must say CURRENT, not an upsell
+            ribbon (mirrors the same fix in the app's PaywallScreen). */}
+        {isCurrent ? <span className="badge current">CURRENT</span> : highlight ? <span className="badge popular">MOST POPULAR</span> : null}
       </div>
       <p style={{ marginTop: 6 }}>{plan.tagline}</p>
       <div style={{ fontSize: 26, fontFamily: "'Fraunces', serif", fontWeight: 600, color: 'var(--primary)', marginTop: 8 }}>
