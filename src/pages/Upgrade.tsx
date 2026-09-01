@@ -102,6 +102,10 @@ export function Upgrade() {
       setConfirmingDowngrade(null);
       setDowngradeDone(planKey);
     } catch (e) {
+      // Leave confirmingDowngrade set (was cleared unconditionally before)
+      // so the error renders right inside the still-open confirm strip
+      // instead of only in the page-bottom banner, which is easy to miss
+      // below the fold and reads as "the button did nothing".
       setErrorMessage(e instanceof ApiException ? e.message : 'Could not change your plan. Please try again.');
     } finally {
       setBusyPlan(null);
@@ -141,6 +145,7 @@ export function Upgrade() {
               isDowngrade={isDowngrade}
               isBlockedUpgrade={isBlockedUpgrade}
               confirming={confirmingDowngrade === planKey}
+              confirmError={confirmingDowngrade === planKey ? errorMessage : ''}
               justDowngraded={downgradeDone === planKey}
               onSubscribe={() => handleSubscribe(planKey)}
               onRequestDowngrade={() => setConfirmingDowngrade(planKey)}
@@ -183,6 +188,7 @@ function PlanCard({
   isDowngrade,
   isBlockedUpgrade,
   confirming,
+  confirmError,
   justDowngraded,
   onSubscribe,
   onRequestDowngrade,
@@ -197,6 +203,7 @@ function PlanCard({
   isDowngrade: boolean;
   isBlockedUpgrade: boolean;
   confirming: boolean;
+  confirmError: string;
   justDowngraded: boolean;
   onSubscribe: () => void;
   onRequestDowngrade: () => void;
@@ -245,6 +252,7 @@ function PlanCard({
               Never mind
             </button>
           </div>
+          {confirmError && <p className="error-text" style={{ marginTop: 10 }}>{confirmError}</p>}
         </div>
       ) : isBlockedUpgrade ? (
         <>

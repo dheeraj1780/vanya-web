@@ -27,11 +27,31 @@ async function request<T>(path: string, options: { method?: string; token?: stri
   };
   if (options.token) headers['Authorization'] = `Bearer ${options.token}`;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: options.method || 'GET',
-    headers,
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-  });
+  // The backend is a free-tier Render service that cold-starts (up to
+  // ~60s) after inactivity — this had NO timeout at all, so a request
+  // made right as it was spinning up just hung with the caller's spinner
+  // stuck forever and no error ever thrown (see e.g. Upgrade.tsx's
+  // downgrade button, which looked like it "did nothing" for exactly this
+  // reason). 70s gives a cold start room to finish before we give up.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 70_000);
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      method: options.method || 'GET',
+      headers,
+      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      signal: controller.signal,
+    });
+  } catch (e) {
+    if (e instanceof DOMException && e.name === 'AbortError') {
+      throw new ApiException('The server is taking too long to respond. Please try again in a moment.', 'TIMEOUT', 0, 'unknown');
+    }
+    throw new ApiException('Could not reach the server. Check your connection and try again.', 'NETWORK_ERROR', 0, 'unknown');
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   const envelope = await response.json();
   if (!envelope.success) {
