@@ -57,4 +57,15 @@ export interface SubscriptionStatusData {
 export interface ChangePlanData {
   plan: string;
   message: string;
+  // Set when the account's active subscription is paid via UPI Autopay —
+  // Razorpay's in-place plan-change endpoint doesn't support UPI mandates
+  // (card-only), so the backend falls back to cancel-at-cycle-end + a new
+  // subscription for the lower plan. That new mandate needs the same
+  // Checkout confirmation as subscribing normally (see billing_service.py's
+  // _change_plan_upi_fallback) — feature access already flipped by the
+  // time this returns either way, so this is a "please also confirm the
+  // new mandate" step, not a "did the downgrade even work" step.
+  requires_checkout: boolean;
+  subscription_id: string | null;
+  razorpay_key_id: string | null;
 }

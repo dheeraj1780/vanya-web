@@ -88,17 +88,52 @@ export function Upgrade() {
     setBusyPlan(null);
   };
 
-  // No Checkout involved — this is a downgrade (see backend's
-  // billing_service.change_plan): no new charge, so nothing for Razorpay
-  // Checkout to collect. Feature access flips immediately on success;
-  // the price only changes on the next renewal.
+  // Usually no Checkout involved — this is a downgrade (see backend's
+  // billing_service.change_plan): no new charge, so normally nothing for
+  // Razorpay Checkout to collect, and feature access flips immediately on
+  // success. EXCEPTION: Razorpay's in-place plan-change endpoint doesn't
+  // support UPI Autopay mandates (card-only) — most of VANYA's India
+  // subscribers pay via UPI, so the backend falls back to cancel + a new
+  // subscription for the lower plan (requires_checkout: true), which needs
+  // this same one-time Checkout confirmation subscribing normally uses.
   const handleDowngrade = async (planKey: 'green_thumb' | 'photosynthesis_phd') => {
     if (!token) return;
     setBusyPlan(planKey);
     setErrorMessage('');
     try {
-      await api.changePlan(token, planKey);
-      await refreshEntitlement();
+      const result = await api.changePlan(token, planKey);
+      await refreshEntitlement(); // features already flipped server-side either way
+
+      if (result.requires_checkout && result.subscription_id && result.razorpay_key_id) {
+        setConfirmingDowngrade(null);
+        const plan = PLANS[planKey];
+        const checkout = new window.Razorpay({
+          key: result.razorpay_key_id,
+          subscription_id: result.subscription_id,
+          name: 'VANYA',
+          description: `${plan.displayName} — ₹${plan.priceInr}/month`,
+          prefill: { email: firebaseUser?.email ?? undefined, name: firebaseUser?.displayName ?? undefined },
+          theme: { color: '#1f3d30' },
+          handler: () => {
+            setDowngradeDone(planKey);
+            setBusyPlan(null);
+          },
+          modal: {
+            ondismiss: () => {
+              // Already on the new plan's features either way — only the
+              // new mandate's confirmation was skipped, so say that
+              // plainly instead of implying the downgrade itself failed.
+              setErrorMessage(
+                `You're on ${plan.displayName} already, but you still need to confirm the new payment method — otherwise it won't continue billing after your current cycle ends.`
+              );
+              setBusyPlan(null);
+            },
+          },
+        });
+        checkout.open();
+        return;
+      }
+
       setConfirmingDowngrade(null);
       setDowngradeDone(planKey);
     } catch (e) {
@@ -107,9 +142,10 @@ export function Upgrade() {
       // instead of only in the page-bottom banner, which is easy to miss
       // below the fold and reads as "the button did nothing".
       setErrorMessage(e instanceof ApiException ? e.message : 'Could not change your plan. Please try again.');
-    } finally {
       setBusyPlan(null);
+      return;
     }
+    setBusyPlan(null);
   };
 
   if (loading) return <div className="page">Loading…</div>;
