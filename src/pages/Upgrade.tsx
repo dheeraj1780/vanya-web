@@ -271,7 +271,7 @@ function PlanCard({
 
       {justDowngraded ? (
         <p style={{ marginTop: 14, fontWeight: 600, color: 'var(--primary)' }}>
-          You're on {plan.displayName} now — your next bill will reflect the new price.
+          You're on {plan.displayName} now, limits and all — your next bill (not this cycle) will reflect the ₹{plan.priceInr}/month price.
         </p>
       ) : confirming ? (
         <div style={{ marginTop: 14 }}>
