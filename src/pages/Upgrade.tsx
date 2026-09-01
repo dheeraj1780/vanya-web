@@ -32,8 +32,17 @@ export function Upgrade() {
     setStatus('opening');
     setErrorMessage('');
     try {
-      const { subscription_id, razorpay_key_id } = await api.createSubscription(token, planKey);
       const plan = PLANS[planKey];
+      // Already paying for a cheaper active plan -- this is an in-place
+      // upgrade, not a first-time subscribe (see billing_service.py's
+      // change_plan upgrade branch): charges the new price immediately
+      // and cancels the old plan right away, no proration for its unused
+      // days -- an explicit product decision, mirrors the downgrade's own
+      // no-refund policy in the other direction. Same Checkout widget
+      // either way, just a different creation call under it.
+      const isUpgrade = activePriceInr !== null && plan.priceInr > activePriceInr;
+      const { subscription_id, razorpay_key_id } = isUpgrade ? await api.changePlan(token, planKey) : await api.createSubscription(token, planKey);
+      if (!subscription_id || !razorpay_key_id) throw new ApiException('Could not start checkout. Please try again.', 'MISSING_CHECKOUT_DETAILS', 0, 'unknown');
 
       const checkout = new window.Razorpay({
         key: razorpay_key_id,
@@ -161,14 +170,11 @@ export function Upgrade() {
           const plan = PLANS[planKey];
           const isCurrent = entitlement?.plan === planKey;
           const isDowngrade = activePriceInr !== null && !isCurrent && plan.priceInr < activePriceInr;
-          // Already paying for a different plan and this card costs more —
-          // blocked for now rather than left open: clicking "Subscribe"
-          // here used to just create a SECOND Razorpay subscription
-          // alongside the still-active first one, with nothing cancelling
-          // the old one. Downgrading has its own safe, no-Checkout path
-          // (change_plan) below; an in-place upgrade would need its own
-          // proration/charge design, which this doesn't attempt.
-          const isBlockedUpgrade = activePriceInr !== null && !isCurrent && plan.priceInr > activePriceInr;
+          // Already paying for a cheaper active plan — an in-place
+          // upgrade (see handleSubscribe's isUpgrade branch): charges the
+          // new price immediately via the same Checkout widget, cancels
+          // the old plan right away. No proration for its unused days.
+          const isUpgrade = activePriceInr !== null && !isCurrent && plan.priceInr > activePriceInr;
 
           return (
             <PlanCard
@@ -179,7 +185,7 @@ export function Upgrade() {
               busy={busyPlan === planKey}
               disabled={!token || busyPlan !== null}
               isDowngrade={isDowngrade}
-              isBlockedUpgrade={isBlockedUpgrade}
+              isUpgrade={isUpgrade}
               confirming={confirmingDowngrade === planKey}
               confirmError={confirmingDowngrade === planKey ? errorMessage : ''}
               justDowngraded={downgradeDone === planKey}
@@ -222,7 +228,7 @@ function PlanCard({
   busy,
   disabled,
   isDowngrade,
-  isBlockedUpgrade,
+  isUpgrade,
   confirming,
   confirmError,
   justDowngraded,
@@ -237,7 +243,7 @@ function PlanCard({
   busy: boolean;
   disabled: boolean;
   isDowngrade: boolean;
-  isBlockedUpgrade: boolean;
+  isUpgrade: boolean;
   confirming: boolean;
   confirmError: string;
   justDowngraded: boolean;
@@ -290,24 +296,22 @@ function PlanCard({
           </div>
           {confirmError && <p className="error-text" style={{ marginTop: 10 }}>{confirmError}</p>}
         </div>
-      ) : isBlockedUpgrade ? (
-        <>
-          <button className="btn-primary" style={{ marginTop: 14 }} disabled>
-            Cancel your current plan first
-          </button>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 6 }}>
-            Manage or cancel your active plan from the Account page, then subscribe here.
-          </p>
-        </>
       ) : (
-        <button
-          className="btn-primary"
-          style={{ marginTop: 14 }}
-          disabled={disabled || isCurrent}
-          onClick={isDowngrade ? onRequestDowngrade : onSubscribe}
-        >
-          {busy ? <span className="spinner" /> : isCurrent ? 'Current plan' : isDowngrade ? `Downgrade to ${plan.displayName}` : `Subscribe to ${plan.displayName}`}
-        </button>
+        <>
+          {isUpgrade && (
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 14, marginBottom: 0 }}>
+              Charges ₹{plan.priceInr}/month right away and switches you over immediately — no refund for the unused days on your current plan.
+            </p>
+          )}
+          <button
+            className="btn-primary"
+            style={{ marginTop: isUpgrade ? 8 : 14 }}
+            disabled={disabled || isCurrent}
+            onClick={isDowngrade ? onRequestDowngrade : onSubscribe}
+          >
+            {busy ? <span className="spinner" /> : isCurrent ? 'Current plan' : isDowngrade ? `Downgrade to ${plan.displayName}` : isUpgrade ? `Upgrade to ${plan.displayName}` : `Subscribe to ${plan.displayName}`}
+          </button>
+        </>
       )}
     </div>
   );

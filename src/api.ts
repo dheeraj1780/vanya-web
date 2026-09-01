@@ -71,8 +71,10 @@ export const api = {
 
   getSubscriptionStatus: (token: string) => request<SubscriptionStatusData>('/billing/subscription-status', { token }),
 
-  // Downgrade only (a strictly cheaper active plan) -- no Checkout, no
-  // new charge; see backend's billing_service.change_plan.
+  // Moves an already-subscribed user directly to a different paid tier,
+  // either direction -- a downgrade returns the change already done, an
+  // upgrade returns requires_checkout (see ChangePlanData and backend's
+  // billing_service.change_plan for how the two genuinely differ).
   changePlan: (token: string, plan: 'green_thumb' | 'photosynthesis_phd') =>
     request<ChangePlanData>('/billing/razorpay/change-plan', { method: 'POST', token, body: { plan } }),
 
