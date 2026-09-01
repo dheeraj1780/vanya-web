@@ -15,6 +15,7 @@ interface AuthContextValue {
   token: string | null;
   entitlement: Entitlement | null;
   loading: boolean;
+  loginHint: string | null;
   signInWithGoogle: () => Promise<void>;
   signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(() => localStorage.getItem(SESSION_KEY));
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loginHint, setLoginHint] = useState<string | null>(null);
 
   const refreshEntitlement = async () => {
     const t = localStorage.getItem(SESSION_KEY);
@@ -61,6 +63,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signInWithCustomToken(auth, handoffToken).catch((e) => {
       console.error('Web sign-in handoff failed:', e);
     });
+  }, []);
+
+  // Weaker fallback for when the handoff token above couldn't be minted
+  // at all (see PaywallScreen._openWebsite's docstring) — the app passes
+  // the signed-in email as ?login_hint=..., which pre-selects/suggests
+  // that account in Google's own sign-in picker instead of a blank one,
+  // rather than fully signing in automatically. Stripped from the URL the
+  // same way auth_token is, once read into state.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const hint = params.get('login_hint');
+    if (!hint) return;
+    setLoginHint(hint);
+    params.delete('login_hint');
+    const cleanSearch = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (cleanSearch ? `?${cleanSearch}` : ''));
   }, []);
 
   // Firebase's own auth state drives the backend session — whenever a
@@ -102,7 +120,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         token,
         entitlement,
         loading,
+        loginHint,
         signInWithGoogle: async () => {
+          // googleProvider is a shared instance (see ./firebase) --
+          // setCustomParameters configures the next OAuth request only;
+          // skipped entirely with no hint so Google's normal picker shows.
+          if (loginHint) googleProvider.setCustomParameters({ login_hint: loginHint });
           await signInWithPopup(auth, googleProvider);
         },
         signInWithApple: async () => {

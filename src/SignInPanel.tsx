@@ -5,7 +5,7 @@ import { APPLE_SIGN_IN_ENABLED } from './config';
 /// Shared across Upgrade/Account — same Firebase project as the app, so
 /// signing in here produces the exact same user_id the app already uses.
 export function SignInPanel({ reason }: { reason: string }) {
-  const { signInWithGoogle, signInWithApple } = useAuth();
+  const { signInWithGoogle, signInWithApple, loginHint } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +25,11 @@ export function SignInPanel({ reason }: { reason: string }) {
   return (
     <div className="card center-column">
       <p style={{ fontWeight: 600, color: 'var(--text)' }}>{reason}</p>
+      {loginHint && (
+        <p style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+          Use the same account you use in the app: <strong style={{ color: 'var(--text)' }}>{loginHint}</strong>
+        </p>
+      )}
       <button className="btn-secondary" disabled={loading} onClick={() => handle(signInWithGoogle)}>
         Continue with Google
       </button>
