@@ -6,11 +6,13 @@ import { PLANS } from '../config';
 import { SignInPanel } from '../SignInPanel';
 
 export function Account() {
-  const { token, entitlement, refreshEntitlement, signOut, loading } = useAuth();
+  const { token, firebaseUser, entitlement, refreshEntitlement, signOut, loading } = useAuth();
   const [cancelling, setCancelling] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [error, setError] = useState('');
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [resuming, setResuming] = useState(false);
+  const [resumed, setResumed] = useState(false);
 
   const handleCancel = async () => {
     if (!token) return;
@@ -25,6 +27,47 @@ export function Account() {
       setError(e instanceof ApiException ? e.message : 'Could not cancel — please try again.');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  // Razorpay has no way to reverse a scheduled cancellation directly (see
+  // backend's billing_service._resume_subscription) — the only real fix
+  // is a fresh subscription for the same plan, deferred to start exactly
+  // when the old one would have ended, so nothing bills twice or drops a
+  // day of access. create_subscription recognizes this exact situation
+  // (same plan, cancel already scheduled) and routes it through that
+  // instead of rejecting it as a duplicate.
+  const handleResume = async (planKey: 'green_thumb' | 'photosynthesis_phd') => {
+    if (!token) return;
+    setResuming(true);
+    setError('');
+    try {
+      const { subscription_id, razorpay_key_id } = await api.createSubscription(token, planKey);
+      const plan = PLANS[planKey];
+      const checkout = new window.Razorpay({
+        key: razorpay_key_id,
+        subscription_id,
+        name: 'VANYA',
+        description: `${plan.displayName} — ₹${plan.priceInr}/month`,
+        prefill: { email: firebaseUser?.email ?? undefined, name: firebaseUser?.displayName ?? undefined },
+        theme: { color: '#1f3d30' },
+        handler: () => {
+          // The new mandate's webhook can take a few seconds to actually
+          // land (same lag as any Checkout success elsewhere) — entitlement.
+          // cancel_scheduled won't flip to false until it does, so show a
+          // confirmation immediately rather than one that flickers back to
+          // "still ending" for a few seconds right after a real success.
+          setCancelled(false);
+          setResumed(true);
+          setResuming(false);
+          refreshEntitlement();
+        },
+        modal: { ondismiss: () => setResuming(false) },
+      });
+      checkout.open();
+    } catch (e) {
+      setError(e instanceof ApiException ? e.message : 'Could not resume — please try again.');
+      setResuming(false);
     }
   };
 
@@ -69,10 +112,20 @@ export function Account() {
 
       {isPaid && (
         <div style={{ marginTop: 24 }}>
-          {cancelled ? (
-            <p style={{ color: 'var(--text)', fontWeight: 600 }}>
-              Your subscription will end at the close of the current billing cycle — you keep access until then.
+          {resumed ? (
+            <p style={{ color: 'var(--primary)', fontWeight: 600 }}>
+              You're all set — your subscription will keep going without a gap.
             </p>
+          ) : cancelled || entitlement.cancel_scheduled ? (
+            <div className="card center-column">
+              <p style={{ fontWeight: 600 }}>
+                Your subscription is set to end {entitlement.expires_at ? `on ${new Date(entitlement.expires_at).toLocaleDateString()}` : 'at the close of the current billing cycle'}.
+              </p>
+              <p>You keep full access until then. Changed your mind?</p>
+              <button className="btn-primary" disabled={resuming} onClick={() => handleResume(entitlement.plan as 'green_thumb' | 'photosynthesis_phd')}>
+                {resuming ? <span className="spinner" /> : 'Resume subscription'}
+              </button>
+            </div>
           ) : confirmOpen ? (
             <div className="card center-column">
               <p style={{ fontWeight: 600 }}>Cancel your {plan.displayName} subscription?</p>

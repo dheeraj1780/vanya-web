@@ -34,6 +34,11 @@ export interface Entitlement {
   garden_setup: GardenSetup;
   next_plan: string | null;
   next_plan_display_name: string | null;
+  // True while a paid subscription is active but scheduled to end at
+  // cycle close — Account.tsx shows "Resume subscription" instead of
+  // "Cancel subscription" whenever this is true (see backend's
+  // billing_service.cancel_subscription / _resume_subscription).
+  cancel_scheduled: boolean;
 }
 
 export interface SignInData {
