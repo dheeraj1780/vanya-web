@@ -21,9 +21,9 @@ export function Privacy() {
       <Section title="Information we collect">
         <SubHeading>Account information</SubHeading>
         <p>
-          If you sign in with Google or Apple, we receive your name and email address from that provider (via
-          Firebase Authentication) so we can create your account and keep your data attached to it across devices.
-          We never see or store your Google/Apple password.
+          If you sign in with Google or Apple, we receive your name and email address from that provider so we can
+          create your account and keep your data attached to it across devices. We never see or store your
+          Google/Apple password.
         </p>
         <SubHeading>Guest use</SubHeading>
         <p>
@@ -33,8 +33,8 @@ export function Privacy() {
         <SubHeading>Plant photos and care data</SubHeading>
         <p>
           Photos you take or choose to identify a plant, diagnose a problem, or add as a Growth Journey memory are
-          uploaded to our cloud storage (Cloudflare R2) and linked to your account. We also store what you enter
-          yourself — plant nicknames, notes, and watering history.
+          uploaded to secure cloud storage and linked to your account. We also store what you enter yourself —
+          plant nicknames, notes, and watering history.
         </p>
         <SubHeading>Camera, photo library, and location</SubHeading>
         <p>
@@ -53,24 +53,25 @@ export function Privacy() {
         </p>
         <SubHeading>Payment information</SubHeading>
         <p>
-          Subscriptions are purchased on this website through Razorpay, our payment processor. VANYA never receives
-          or stores your card, UPI, or bank details — Razorpay handles payment directly and only tells us whether
-          your subscription is active.
+          Subscriptions are purchased on this website through our payment processor. VANYA never receives or stores
+          your card, UPI, or bank details — the payment processor handles payment directly and only tells us
+          whether your subscription is active.
         </p>
       </Section>
 
       <Section title="How we use your information">
-        <p>To provide the core service — identifying and diagnosing your plants, tracking their care, and reminding you when they need water. Plant photos you submit for identification or diagnosis are sent to Google's Gemini AI to analyze — that's how VANYA recognizes species and spots problems. We also use your information to manage your subscription, respond when you contact us, and improve the app based on how it's actually used.</p>
+        <p>To provide the core service — identifying and diagnosing your plants, tracking their care, and reminding you when they need water. Plant photos you submit for identification or diagnosis are sent to a third-party AI service to analyze — that's how VANYA recognizes species and spots problems. We also use your information to manage your subscription, respond when you contact us, and improve the app based on how it's actually used.</p>
       </Section>
 
       <Section title="Who we share it with">
         <p>We don't sell your personal information to anyone, ever. We share the minimum necessary with the service providers that make VANYA work:</p>
         <ul style={{ color: 'var(--text-secondary)', lineHeight: 1.7, paddingLeft: 20 }}>
-          <li>Google — sign-in (Firebase Authentication) and plant identification/diagnosis (Gemini AI)</li>
+          <li>Google — if you choose Sign in with Google</li>
           <li>Apple — Sign in with Apple, where used</li>
-          <li>Cloudflare — storage for the photos you upload</li>
-          <li>Razorpay — payment processing for subscriptions</li>
-          <li>Render and Vercel — hosting for our backend and this website</li>
+          <li>A third-party AI service — analyzes photos you submit for plant identification/diagnosis</li>
+          <li>A cloud storage provider — stores the photos you upload</li>
+          <li>Our payment processor — handles subscription billing</li>
+          <li>Our hosting providers — run our backend and this website</li>
         </ul>
       </Section>
 
