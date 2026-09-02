@@ -99,11 +99,9 @@ export function Account() {
         )}
       </div>
 
-      <div className="eyebrow" style={{ margin: '20px 0 10px' }}>THIS WEEK &amp; MONTH</div>
+      <div className="eyebrow" style={{ margin: '20px 0 10px' }}>AI ACTIONS</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <UsageRow label="Plant identification" usage={entitlement.identification} />
-        <UsageRow label="Care Calculator" usage={entitlement.care_calculator} />
-        <UsageRow label="Diagnose" usage={entitlement.diagnose} />
+        <UsageRow label="Identify, diagnose & Care Calculator" usage={entitlement.ai_actions} />
         <div className="card" style={{ padding: 12 }}>
           <div style={{ fontWeight: 600, fontSize: 12.5 }}>Plants in your garden</div>
           <p>{entitlement.plant_count} / {entitlement.plant_limit} — permanent slots, never reset</p>

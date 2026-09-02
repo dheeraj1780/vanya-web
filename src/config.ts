@@ -7,6 +7,11 @@ export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'https:
 
 // Mirrors app/core/plans.py / lib/config/plans.dart — display-only, exact
 // same values. If pricing changes, update all three.
+//
+// This mirror had drifted from the actual backend values in several
+// places (wrong Plantie numbers, no guest entry, no growth-memory field)
+// before this rewrite -- fixed alongside the aiActions consolidation
+// below, not just patched around it.
 export interface PlanConfig {
   key: 'guest' | 'plantie' | 'green_thumb' | 'photosynthesis_phd';
   displayName: string;
@@ -16,24 +21,42 @@ export interface PlanConfig {
   maxPlants: number;
   wishlistLimit: number;
   gardenSetupIdentifications: number;
-  identification: { limit: number; period: string };
-  careCalculator: { limit: number; period: string };
-  diagnose: { limit: number; period: string };
+  // Identify + Care Calculator + diagnose, unified into one shared pool
+  // -- see plans.py's AI ACTIONS note for why this used to be three
+  // separate allowances on three different clocks. period is 'week' for
+  // every signed-in tier, 'lifetime' for guest (a one-time trial, not an
+  // ongoing relationship).
+  aiActions: { limit: number; period: string };
+  // Persistent slots for dated photo memories, same PLANT COLLECTION
+  // RULES semantics as maxPlants. 0 = not offered on this tier; -1 =
+  // unlimited.
+  growthMemoryLimit: number;
 }
 
 export const PLANS: Record<string, PlanConfig> = {
+  guest: {
+    key: 'guest',
+    displayName: 'Guest',
+    tagline: 'Try VANYA before you sign in.',
+    emoji: '🌾',
+    priceInr: 0,
+    maxPlants: 3,
+    wishlistLimit: 3,
+    gardenSetupIdentifications: 0,
+    aiActions: { limit: 6, period: 'lifetime' },
+    growthMemoryLimit: 0,
+  },
   plantie: {
     key: 'plantie',
     displayName: 'Plantie',
     tagline: 'Start your plant journey.',
     emoji: '🌱',
     priceInr: 0,
-    maxPlants: 3,
+    maxPlants: 5,
     wishlistLimit: 5,
     gardenSetupIdentifications: 0,
-    identification: { limit: 1, period: 'week' },
-    careCalculator: { limit: 2, period: 'week' },
-    diagnose: { limit: 1, period: 'month' },
+    aiActions: { limit: 6, period: 'week' },
+    growthMemoryLimit: 0,
   },
   green_thumb: {
     key: 'green_thumb',
@@ -44,9 +67,8 @@ export const PLANS: Record<string, PlanConfig> = {
     maxPlants: 10,
     wishlistLimit: 20,
     gardenSetupIdentifications: 10,
-    identification: { limit: 3, period: 'week' },
-    careCalculator: { limit: 7, period: 'week' },
-    diagnose: { limit: 2, period: 'month' },
+    aiActions: { limit: 15, period: 'week' },
+    growthMemoryLimit: 4,
   },
   photosynthesis_phd: {
     key: 'photosynthesis_phd',
@@ -57,9 +79,8 @@ export const PLANS: Record<string, PlanConfig> = {
     maxPlants: 25,
     wishlistLimit: 50,
     gardenSetupIdentifications: 25,
-    identification: { limit: 10, period: 'week' },
-    careCalculator: { limit: 20, period: 'week' },
-    diagnose: { limit: 5, period: 'month' },
+    aiActions: { limit: 35, period: 'week' },
+    growthMemoryLimit: -1,
   },
 };
 

@@ -269,9 +269,7 @@ function PlanCard({
       <ul className="feature-list">
         <li>{plan.maxPlants} plants in your garden</li>
         <li>{plan.wishlistLimit} wishlist slots</li>
-        <li>{plan.identification.limit} identification{plan.identification.limit === 1 ? '' : 's'} / {plan.identification.period}</li>
-        <li>{plan.careCalculator.limit} Care Calculator use{plan.careCalculator.limit === 1 ? '' : 's'} / {plan.careCalculator.period}</li>
-        <li>{plan.diagnose.limit} diagnosis{plan.diagnose.limit === 1 ? '' : 'es'} / {plan.diagnose.period}</li>
+        <li>{plan.aiActions.limit} AI action{plan.aiActions.limit === 1 ? '' : 's'} / {plan.aiActions.period} — identify, diagnose, or run the Care Calculator</li>
         {plan.gardenSetupIdentifications > 0 && <li>{plan.gardenSetupIdentifications} bonus identifications to set up your garden</li>}
       </ul>
 

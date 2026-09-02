@@ -28,9 +28,10 @@ export interface Entitlement {
   plant_count: number;
   plant_limit: number;
   wishlist: WishlistUsage;
-  identification: FeatureUsage;
-  care_calculator: FeatureUsage;
-  diagnose: FeatureUsage;
+  // Identify + Care Calculator + diagnose, unified into one shared pool —
+  // see the backend's plans.py AI ACTIONS note for why this used to be
+  // three separate fields on three different clocks.
+  ai_actions: FeatureUsage;
   garden_setup: GardenSetup;
   next_plan: string | null;
   next_plan_display_name: string | null;
