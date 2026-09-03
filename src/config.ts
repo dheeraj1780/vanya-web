@@ -43,7 +43,7 @@ export const PLANS: Record<string, PlanConfig> = {
     maxPlants: 3,
     wishlistLimit: 3,
     gardenSetupIdentifications: 0,
-    aiActions: { limit: 6, period: 'lifetime' },
+    aiActions: { limit: 8, period: 'lifetime' },
     growthMemoryLimit: 0,
   },
   plantie: {
@@ -55,7 +55,7 @@ export const PLANS: Record<string, PlanConfig> = {
     maxPlants: 5,
     wishlistLimit: 5,
     gardenSetupIdentifications: 0,
-    aiActions: { limit: 6, period: 'week' },
+    aiActions: { limit: 10, period: 'week' },
     growthMemoryLimit: 0,
   },
   green_thumb: {
@@ -67,7 +67,7 @@ export const PLANS: Record<string, PlanConfig> = {
     maxPlants: 10,
     wishlistLimit: 20,
     gardenSetupIdentifications: 10,
-    aiActions: { limit: 15, period: 'week' },
+    aiActions: { limit: 25, period: 'week' },
     growthMemoryLimit: 4,
   },
   photosynthesis_phd: {
@@ -79,7 +79,7 @@ export const PLANS: Record<string, PlanConfig> = {
     maxPlants: 25,
     wishlistLimit: 50,
     gardenSetupIdentifications: 25,
-    aiActions: { limit: 35, period: 'week' },
+    aiActions: { limit: 60, period: 'week' },
     growthMemoryLimit: -1,
   },
 };
