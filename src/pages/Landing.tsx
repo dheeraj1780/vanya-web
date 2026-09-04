@@ -6,7 +6,7 @@ export function Landing() {
     <div className="page">
       <div style={{ textAlign: 'center', margin: '40px 0 32px' }}>
         <div style={{ fontSize: 32 }}>🌿</div>
-        <h1 style={{ fontSize: 30, marginTop: 8 }}>VANYA</h1>
+        <h1 style={{ fontSize: 30, marginTop: 8 }}>Vanya</h1>
         <p style={{ marginTop: 8 }}>Identify plants, track care, grow something beautiful.</p>
       </div>
 

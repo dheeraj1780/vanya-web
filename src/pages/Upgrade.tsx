@@ -47,7 +47,7 @@ export function Upgrade() {
       const checkout = new window.Razorpay({
         key: razorpay_key_id,
         subscription_id,
-        name: 'VANYA',
+        name: 'Vanya',
         description: `${plan.displayName} — ₹${plan.priceInr}/month`,
         prefill: { email: firebaseUser?.email ?? undefined, name: firebaseUser?.displayName ?? undefined },
         theme: { color: '#1f3d30' },
@@ -119,7 +119,7 @@ export function Upgrade() {
         const checkout = new window.Razorpay({
           key: result.razorpay_key_id,
           subscription_id: result.subscription_id,
-          name: 'VANYA',
+          name: 'Vanya',
           description: `${plan.displayName} — ₹${plan.priceInr}/month`,
           prefill: { email: firebaseUser?.email ?? undefined, name: firebaseUser?.displayName ?? undefined },
           theme: { color: '#1f3d30' },
@@ -161,7 +161,7 @@ export function Upgrade() {
 
   return (
     <div className="page">
-      <div className="eyebrow">GROW FURTHER WITH VANYA</div>
+      <div className="eyebrow">Grow further with Vanya</div>
       <h1 style={{ fontSize: 26, margin: '6px 0 8px' }}>Choose your plan</h1>
       <p style={{ marginBottom: 20 }}>More identifications, more Care Calculator runs, more room for your garden.</p>
 
@@ -207,7 +207,7 @@ export function Upgrade() {
       {status === 'done' && (
         <div className="card center-column" style={{ marginTop: 16 }}>
           <p style={{ fontWeight: 600, color: 'var(--primary)' }}>You're all set 🌿</p>
-          <p>Open the VANYA app — your new plan will show up there automatically.</p>
+          <p>Open the Vanya app — your new plan will show up there automatically.</p>
         </div>
       )}
       {errorMessage && <p className="error-text" style={{ marginTop: 12 }}>{errorMessage}</p>}

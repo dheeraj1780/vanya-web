@@ -37,7 +37,7 @@ export const PLANS: Record<string, PlanConfig> = {
   guest: {
     key: 'guest',
     displayName: 'Guest',
-    tagline: 'Try VANYA before you sign in.',
+    tagline: 'Try Vanya before you sign in.',
     emoji: '🌾',
     priceInr: 0,
     maxPlants: 3,

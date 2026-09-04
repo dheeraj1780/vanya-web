@@ -11,7 +11,7 @@ export default function App() {
       <BrowserRouter>
         <nav style={{ display: 'flex', justifyContent: 'center', gap: 24, padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
           <Link to="/" style={{ textDecoration: 'none', fontWeight: 700, color: 'var(--primary)' }}>
-            🌿 VANYA
+            🌿 Vanya
           </Link>
           <Link to="/upgrade" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: 13.5, alignSelf: 'center' }}>
             Plans

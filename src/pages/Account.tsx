@@ -47,7 +47,7 @@ export function Account() {
       const checkout = new window.Razorpay({
         key: razorpay_key_id,
         subscription_id,
-        name: 'VANYA',
+        name: 'Vanya',
         description: `${plan.displayName} — ₹${plan.priceInr}/month`,
         prefill: { email: firebaseUser?.email ?? undefined, name: firebaseUser?.displayName ?? undefined },
         theme: { color: '#1f3d30' },
