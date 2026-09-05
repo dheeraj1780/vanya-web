@@ -1,9 +1,15 @@
 // Same env-driven base URL pattern as the Flutter app's ApiClient — set
 // via VITE_API_BASE_URL at build/dev time. Defaults to the real deployed
-// Render backend (Vercel's own build already sets VITE_API_BASE_URL to
-// this same value; this fallback just keeps a plain local `npm run dev`
-// pointed somewhere real too).
-export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'https://vanya-backend-64ja.onrender.com/v1';
+// backend (Vercel's own build sets VITE_API_BASE_URL as a real
+// environment variable in its project settings — that one, not this
+// fallback, is what actually controls the live site; this default just
+// keeps a plain local `npm run dev` pointed somewhere real too).
+//
+// Was the Render free-tier URL -- now a self-hosted DigitalOcean droplet
+// in Bangalore. Updating this file's fallback alone does NOT move the
+// live site; Vercel's own VITE_API_BASE_URL project env var also needs
+// updating and a redeploy, since that's what wins in production.
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL || 'https://vanya-plantcare-api.duckdns.org/v1';
 
 // Mirrors app/core/plans.py / lib/config/plans.dart — display-only, exact
 // same values. If pricing changes, update all three.
