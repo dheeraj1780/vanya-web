@@ -4,6 +4,7 @@ import { Landing } from './pages/Landing';
 import { Upgrade } from './pages/Upgrade';
 import { Account } from './pages/Account';
 import { Privacy } from './pages/Privacy';
+import { Terms } from './pages/Terms';
 
 export default function App() {
   return (
@@ -25,13 +26,19 @@ export default function App() {
           <Route path="/upgrade" element={<Upgrade />} />
           <Route path="/account" element={<Account />} />
           <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
         </Routes>
         {/* Play Store's Data Safety section and store listing both need a
             reachable Privacy Policy URL — a footer link keeps it findable
-            from every page, not just linked in from the app's Settings. */}
-        <footer style={{ textAlign: 'center', padding: '32px 20px', borderTop: '1px solid var(--border)', marginTop: 20 }}>
+            from every page, not just linked in from the app's Settings.
+            Terms/Refund policy is required alongside it for any app-listing
+            with in-app purchases (Green Thumb / Photosynthesis PhD). */}
+        <footer style={{ textAlign: 'center', padding: '32px 20px', borderTop: '1px solid var(--border)', marginTop: 20, display: 'flex', justifyContent: 'center', gap: 16 }}>
           <Link to="/privacy" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: 12.5 }}>
             Privacy Policy
+          </Link>
+          <Link to="/terms" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: 12.5 }}>
+            Terms &amp; Refund Policy
           </Link>
         </footer>
       </BrowserRouter>

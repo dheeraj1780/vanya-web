@@ -109,7 +109,7 @@ export function Privacy() {
 
       <Section title="Contact us">
         <p>
-          For any privacy question or request: <strong style={{ color: 'var(--accent)' }}>[ADD YOUR PRIVACY CONTACT EMAIL HERE]</strong>
+          For any privacy question or request: <strong style={{ color: 'var(--accent)' }}>vanya.care.ops@gmail.com</strong>
         </p>
       </Section>
     </div>
