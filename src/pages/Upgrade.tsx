@@ -263,7 +263,7 @@ function PlanCard({
         {isCurrent ? <span className="badge current">CURRENT</span> : highlight ? <span className="badge popular">MOST POPULAR</span> : null}
       </div>
       <p style={{ marginTop: 6 }}>{plan.tagline}</p>
-      <div style={{ fontSize: 26, fontFamily: "'Fraunces', serif", fontWeight: 600, color: 'var(--primary)', marginTop: 8 }}>
+      <div style={{ fontSize: 26, fontFamily: "'Bricolage Grotesque', sans-serif", fontWeight: 600, color: 'var(--primary)', marginTop: 8 }}>
         ₹{plan.priceInr}<span style={{ fontSize: 14, color: 'var(--text-secondary)', fontFamily: 'inherit', fontWeight: 400 }}>/month</span>
       </div>
       <ul className="feature-list">
