@@ -5,6 +5,7 @@ import { Upgrade } from './pages/Upgrade';
 import { Account } from './pages/Account';
 import { Privacy } from './pages/Privacy';
 import { Terms } from './pages/Terms';
+import { DeleteAccount } from './pages/DeleteAccount';
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/delete-account" element={<DeleteAccount />} />
         </Routes>
         {/* Play Store's Data Safety section and store listing both need a
             reachable Privacy Policy URL — a footer link keeps it findable
@@ -39,6 +41,9 @@ export default function App() {
           </Link>
           <Link to="/terms" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: 12.5 }}>
             Terms &amp; Refund Policy
+          </Link>
+          <Link to="/delete-account" style={{ textDecoration: 'none', color: 'var(--text-secondary)', fontSize: 12.5 }}>
+            Delete Account
           </Link>
         </footer>
       </BrowserRouter>
